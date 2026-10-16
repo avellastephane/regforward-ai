@@ -1,15 +1,21 @@
 # RegForward AI
 
-Website for RegForward AI and its CMC regulatory consultant tools. This repository contains the published static site as of October 16, 2026.
+Source for the RegForward AI website at [regforwardai.com](https://regforwardai.com). Bolt hosts the published site and manages its database.
 
-## View locally
+## Run locally
 
-Serve this directory with any static web server, then open `index.html`. The page uses `styles.css`, `script.js`, and `assets/`; no build step is required.
+Install dependencies with `npm install`, then run `npm run dev`. `npm run build` creates the static output in `dist/`.
+
+The inquiry form needs the Bolt project's public `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` values in a local `.env` file. Bolt provides these values in its project settings. `.env` is ignored by Git and must not be committed.
+
+## Inquiry handling
+
+The public form calls the Bolt Database `submit-inquiry` server function. That function validates and stores the inquiry, then sends an owner notification with Resend from and to `contact@regforwardai.com`. Its `RESEND_API_KEY` is stored in Bolt's secret store, not in this repository.
+
+The `inquiries` table has row level security enabled and no direct access for anonymous or generic authenticated users. Only the server function's service role and Bolt's owner dashboard can access the records. The migrations in `supabase/migrations/` show the setup and subsequent access restrictions in order.
+
+The published form and notification were tested on October 16, 2026. The test submission appeared in Bolt Database and its notification arrived in the contact mailbox.
 
 ## Publishing
 
-The current public preview is hosted separately. Pushing this repository does not automatically deploy the preview or the Bolt.new site. Copy these files into the chosen production host when ready.
-
-## Inquiry form
-
-The inquiry form sends submissions to the existing Supabase project using a browser-side public anonymous key and calls its notification function. Before using a new deployment for live traffic, verify the destination, database permissions, notification delivery, and an end-to-end test inquiry. Do not submit confidential client data in a test.
+Changes pushed to GitHub do not automatically update the Bolt deployment. Publish updates from the Bolt project and check the live form after any backend change. The `public/_redirects` file sends the `regforward.ai` aliases to the primary domain.

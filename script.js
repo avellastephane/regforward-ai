@@ -24,8 +24,8 @@ updateBackToTop();
 const form = document.querySelector('#inquiry-form');
 const status = document.querySelector('#form-status');
 const submitButton = form.querySelector('button[type="submit"]');
-const apiBase = 'https://zdghskaxitvvowtdiani.supabase.co';
-const apiKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpkZ2hza2F4aXR2dm93dGRpYW5pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyMzA0OTEsImV4cCI6MjA4NTgwNjQ5MX0.vtJVDNBEPtVqv92tH3xhttguzwHqT1ku3KNwbRiG-hE';
+const apiBase = import.meta.env.VITE_SUPABASE_URL;
+const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Keep offering links in the same page and preselect the relevant inquiry topic.
 document.querySelectorAll('a[data-service]').forEach(link => link.addEventListener('click', () => {
@@ -39,16 +39,14 @@ form.addEventListener('submit', async event => {
   status.textContent = '';
   if (!form.reportValidity()) return;
   const data = new FormData(form);
-  // Keep existing service IDs so the inquiry backend continues to recognize submissions.
-  const serviceIds = { ctd: 'ctd-authoring', enablement: 'custom-workflows', strategy: 'cmc-strategy', 'meeting-prep': 'meeting-packages', inspection: 'inspection-support', lifecycle: 'lifecycle-strategy' };
-  const services = data.getAll('services').map(value => serviceIds[value] || value);
+  const services = data.getAll('services');
   const profile = String(data.get('profile_url') || '').trim();
   const payload = {
     name: String(data.get('name') || '').trim(),
     email: String(data.get('email') || '').trim(),
     organization: String(data.get('organization') || '').trim(),
     audience: String(data.get('audience') || ''),
-    service: services[0] === 'signalpath-sample' ? 'signalpath' : (services[0] || 'general'),
+    service: services[0] || 'general',
     services,
     timing: data.get('timing') || null,
     profile_url: profile || null,
@@ -63,15 +61,21 @@ form.addEventListener('submit', async event => {
   status.textContent = 'Sending your inquiry…';
   try {
     const headers = { apikey: apiKey, Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
-    const response = await fetch(`${apiBase}/rest/v1/inquiries`, {
-      method: 'POST', headers: { ...headers, Prefer: 'return=minimal' }, body: JSON.stringify(payload)
+    const response = await fetch(`${apiBase}/functions/v1/submit-inquiry`, {
+      method: 'POST', headers, body: JSON.stringify(payload)
     });
-    if (!response.ok) throw new Error(`Inquiry request failed (${response.status})`);
-    // The original site's notification function is invoked after storage succeeds.
-    fetch(`${apiBase}/functions/v1/notify-new-inquiries`, { method: 'POST', headers, body: '{}' }).catch(() => {});
+    if (!response.ok) {
+      const errBody = await response.json().catch(() => ({}));
+      throw new Error(errBody.error || `Request failed (${response.status})`);
+    }
+    const result = await response.json();
     form.reset();
     status.classList.add('success');
-    status.textContent = 'Thank you. Your inquiry was received.';
+    if (result.notification_failed) {
+      status.textContent = 'Thank you. Your inquiry was saved, but the email notification could not be sent — we will still see your submission.';
+    } else {
+      status.textContent = 'Thank you. Your inquiry was received.';
+    }
   } catch (error) {
     status.classList.add('error');
     status.textContent = 'We could not send your inquiry. Please try again in a moment.';
