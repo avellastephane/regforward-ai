@@ -11,16 +11,16 @@ const RESEND_FROM = "contact@regforwardai.com";
 const RESEND_TO = "contact@regforwardai.com";
 
 const SERVICE_LABELS: Record<string, string> = {
-  signalpath: "RegForward Pulse — leads & briefs",
-  regchat: "RegForward Navigate — source-linked answers",
-  "meeting-simulation": "RegForward Rehearse — agency meeting simulation",
+  signalpath: "RegForward AI Pulse — leads & briefs",
+  regchat: "RegForward AI Navigate — source-linked answers",
+  "meeting-simulation": "RegForward AI Rehearse — agency meeting simulation",
   "meeting-prep": "Agency Meeting Preparation",
-  ctd: "RegForward Author — CMC submission authoring",
+  ctd: "RegForward AI Author — CMC submission authoring",
   enablement: "Consultant Enablement",
   strategy: "CMC Strategy & Gap Assessment",
   inspection: "Inspection Preparation & Response (planned)",
   lifecycle: "CMC Lifecycle & Change Assessment (planned)",
-  "due-diligence": "RegForward DD — CMC due diligence (planned)",
+  "due-diligence": "RegForward AI DD — CMC due diligence (planned)",
   general: "General inquiry",
 };
 
